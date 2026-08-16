@@ -5,7 +5,34 @@ import mido
 import subprocess
 import vban_cmd
 
+broadcast_process = None
+
 BROADCAST_EXE = r"C:\Program Files\Snap.Net\Snap.Net.Broadcast.exe"
+
+# --- KONFIGURATION ---
+SNAPSERVER_IP = "192.168.100.150"
+SNAPSERVER_PORT = 1780 
+
+SEND_DELAY = 0.15 
+
+# Multiroom Toggle Button (Pad 5 -> Note 39)
+TOGGLE_NOTE = 39  
+
+# 1. Lautstärke-Potis (CC 5 bis 8)
+MIDI_TO_CLIENT = {
+    5: "d8:43:ae:12:04:17#11", 
+    6: "pi4",   
+    7: "kueche", 
+    8: "11:22:33:44:55:66" 
+}
+
+# 2. Mute-Pads (Dezimal-Notennummern: 35, 36, 37, 38)
+NOTE_TO_MUTE = {
+    35: "d8:43:ae:12:04:17#11", 
+    36: "pi4",   
+    37: "kueche", 
+    38: "11:22:33:44:55:66" 
+}
 
 # VBAN-Verbindung zur lokalen VB-Matrix aufbauen
 vban = vban_cmd.api(
@@ -19,74 +46,65 @@ vban.login()
 # Flag für den aktuellen Status
 multiroom_active = False
 
-# Matrix Indizes aus deinem Grid:
-# Out: UR242 (0, 1) | In 1: Windows Direct (8, 9) | In 2: SnapClient (16, 17)
-OUT_L, OUT_R = 0, 1
-IN1_L, IN1_R = 8, 9
-IN2_L, IN2_R = 16, 17
-
-def toggle_multiroom():
-    global multiroom_active
-    multiroom_active = not multiroom_active
-
+def set_multiroom_on():
+    global multiroom_active, broadcast_process
     if multiroom_active:
-        print("--> MULTIROOM AKTIV (PC-Direct = -80dB, SnapClient = 0dB)")
+        return
+    
+    multiroom_active = True
+    print("--> MULTIROOM AKTIV (PC-Direct = -80dB, SnapClient = 0dB)")
+    
+    try:
+        # 1. Matrix schalten
+        vban.sendtext("Point(VAIO1.IN[1],ASIO128.OUT[1]).dBGain = -80.0;")
+        vban.sendtext("Point(VAIO1.IN[2],ASIO128.OUT[2]).dBGain = -80.0;")
+        vban.sendtext("Point(VAIO2.IN[1],ASIO128.OUT[1]).dBGain = 0.0;")
+        vban.sendtext("Point(VAIO2.IN[2],ASIO128.OUT[2]).dBGain = 0.0;")
         
-        # 1. Direkten PC-Sound auf -80 dB
-        vban.sendtext(f"Point(VAIO1.IN[1],ASIO128.OUT[1]).dBGain = -80.0;")
-        vban.sendtext(f"Point(VAIO1.IN[2],ASIO128.OUT[2]).dBGain = -80.0;")
+        # 2. Broadcast starten
+        if broadcast_process is None:
+            broadcast_process = subprocess.Popen(
+                [
+                    BROADCAST_EXE, 
+                    "-s", "6", 
+                    "-h", SNAPSERVER_IP, 
+                    "-p", "4953"
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+    except Exception as e:
+        print(f"[FEHLER set_multiroom_on]: {e}")
+
+def set_multiroom_off():
+    global multiroom_active, broadcast_process
+    if not multiroom_active:
+        return
         
-        # 2. SnapClient-Signal auf 0 dB
-        vban.sendtext(f"Point(VAIO2.IN[1],ASIO128.OUT[1]).dBGain = 0.0;")
-        vban.sendtext(f"Point(VAIO2.IN[2],ASIO128.OUT[2]).dBGain = 0.0;")
+    multiroom_active = False
+    print("--> LOKALER MODUS AKTIV (PC-Direct = -6dB, SnapClient = -80dB)")
+    
+    try:
+        # 1. Matrix schalten
+        vban.sendtext("Point(VAIO2.IN[1],ASIO128.OUT[1]).dBGain = -80.0;")
+        vban.sendtext("Point(VAIO2.IN[2],ASIO128.OUT[2]).dBGain = -80.0;")
+        vban.sendtext("Point(VAIO1.IN[1],ASIO128.OUT[1]).dBGain = -6.0;")
+        vban.sendtext("Point(VAIO1.IN[2],ASIO128.OUT[2]).dBGain = -6.0;")
         
-        # 3. Snap.Net Broadcast per CLI im Hintergrund starten
-        subprocess.Popen([
-            BROADCAST_EXE, 
-            "-s", "6", 
-            "-h", SNAPSERVER_IP, 
-            "-p", "4953"
-        ])
-
-    else:
-        print("--> LOKALER MODUS AKTIV (PC-Direct = 0dB, SnapClient = -80dB)")
+        # 2. Broadcast sofort beenden
+        if broadcast_process is not None:
+            try:
+                broadcast_process.kill()
+            except Exception:
+                pass
+            broadcast_process = None
         
-        # 1. SnapClient auf -80 dB
-        vban.sendtext(f"Point(VAIO2.IN[1],ASIO128.OUT[1]).dBGain = -80.0;")
-        vban.sendtext(f"Point(VAIO2.IN[2],ASIO128.OUT[2]).dBGain = -80.0;")
-        
-        # 2. PCSound-Signal auf 0 dB
-        vban.sendtext(f"Point(VAIO1.IN[1],ASIO128.OUT[1]).dBGain = -6.0;")
-        vban.sendtext(f"Point(VAIO1.IN[2],ASIO128.OUT[2]).dBGain = -6.0;")
-        
-        # 3. Broadcast-Prozess beenden
-        subprocess.run(["taskkill", "/f", "/im", "Snap.Net.Broadcast.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-
-# --- KONFIGURATION ---
-SNAPSERVER_IP = "192.168.100.150"
-SNAPSERVER_PORT = 1780 
-
-SEND_DELAY = 0.15 
-
-# Multiroom Toggle Button (z.B. Pad 5 -> Note 39)
-TOGGLE_NOTE = 39  
-
-# 1. Lautstärke-Potis (CC 5 bis 8)
-MIDI_TO_CLIENT = {
-    5: "biggi", 
-    6: "pi4",   
-    7: "kueche", 
-    8: "11:22:33:44:55:66" 
-}
-
-# 2. Mute-Pads (Dezimal-Notennummern: 35, 36, 37, 38)
-NOTE_TO_MUTE = {
-    35: "biggi", 
-    36: "pi4",   
-    37: "kueche", 
-    38: "11:22:33:44:55:66" 
-}
+        subprocess.Popen(["taskkill", "/f", "/im", "Snap.Net.Broadcast.exe"], 
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        print(f"[FEHLER set_multiroom_off]: {e}")
 
 http_session = requests.Session()
 pending_volumes = {}
@@ -136,12 +154,13 @@ def main():
     print(f"Erfolgreich verbunden mit: {lpd8_name}")
     print("Drücke Strg + C zum Beenden.\n")
 
+    inport = mido.open_input(lpd8_name)
+
     try:
-        with mido.open_input(lpd8_name) as inport:
-            while True:
-                now = time.time()
-                msg = inport.poll()
-                
+        while True:
+            now = time.time()
+            
+            for msg in inport.iter_pending():
                 if msg is not None:
                     # A) Lautstärke-Poti wurde gedreht
                     if msg.type == 'control_change' and msg.control in MIDI_TO_CLIENT:
@@ -150,36 +169,47 @@ def main():
                         pending_volumes[client_id] = (percent_vol, now)
                         print(f"-> Poti gedreht -> {client_id}: {percent_vol}%")
 
-                    # B) Mute-Pad wurde gedrückt
+                    # B) Mute-Pads (35, 36, 37, 38)
                     elif hasattr(msg, 'note') and msg.note in NOTE_TO_MUTE:
                         client_id = NOTE_TO_MUTE[msg.note]
+                        
+                        # 1. Druck (Pad leuchtet) -> MUTE AUS (Sound an)
                         if msg.type == 'note_on' and msg.velocity > 0:
-                            set_snapcast_mute(client_id, True)
-                        elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
                             set_snapcast_mute(client_id, False)
-
-                    # C) TOGGLE-PAD FÜR MULTIROOM (z. B. Note 39)
-                    elif hasattr(msg, 'note') and msg.note == TOGGLE_NOTE:
-                        if msg.type == 'note_on' and msg.velocity > 0:
-                            toggle_multiroom()
+                            
+                        # 2. Druck (Pad dunkel) -> MUTE AN (Stumm)
                         elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
-                            toggle_multiroom()
+                            set_snapcast_mute(client_id, True)
+                            
+                    # C) HARDWARE-TOGGLE FÜR MULTIROOM (Pad 5 / Note 39)
+                    elif hasattr(msg, 'note') and msg.note == TOGGLE_NOTE:
+                        # 1. Druck (Pad leuchtet auf) -> Multiroom EIN
+                        if msg.type == 'note_on' and msg.velocity > 0:
+                            set_multiroom_on()
+                        # 2. Druck (Pad geht aus) -> Lokal (AUS)
+                        elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
+                            set_multiroom_off()
 
+            # --- Debounce-Puffer abarbeiten ---
+            clients_to_remove = []
+            for client_id, (vol, last_time) in pending_volumes.items():
+                if now - last_time >= SEND_DELAY:
+                    set_snapcast_volume(client_id, vol)
+                    clients_to_remove.append(client_id)
+            
+            for client_id in clients_to_remove:
+                del pending_volumes[client_id]
 
-                # --- Debounce-Puffer abarbeiten ---
-                clients_to_remove = []
-                for client_id, (vol, last_time) in pending_volumes.items():
-                    if now - last_time >= SEND_DELAY:
-                        set_snapcast_volume(client_id, vol)
-                        clients_to_remove.append(client_id)
-                
-                for client_id in clients_to_remove:
-                    del pending_volumes[client_id]
-
-                time.sleep(0.005)
+            time.sleep(0.005)
 
     except KeyboardInterrupt:
         print("\nSkript beendet.")
+
+    finally:
+        try:
+            inport.close()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     main()
