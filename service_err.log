@@ -1,0 +1,78 @@
+2026-08-16 18:16:00.623: C:\Users\danie\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\danie\\Documents\\1-programming\\Python\\snapcast-midi\\venv\\Scripts\\snapcast-midi.py': [Errno 2] No such file or directory
+2026-08-16 18:16:02.702: C:\Users\danie\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\danie\\Documents\\1-programming\\Python\\snapcast-midi\\venv\\Scripts\\snapcast-midi.py': [Errno 2] No such file or directory
+2026-08-16 18:16:06.789: C:\Users\danie\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\danie\\Documents\\1-programming\\Python\\snapcast-midi\\venv\\Scripts\\snapcast-midi.py': [Errno 2] No such file or directory
+2026-08-16 18:16:14.892: C:\Users\danie\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\danie\\Documents\\1-programming\\Python\\snapcast-midi\\venv\\Scripts\\snapcast-midi.py': [Errno 2] No such file or directory
+2026-08-16 18:16:30.986: C:\Users\danie\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\danie\\Documents\\1-programming\\Python\\snapcast-midi\\venv\\Scripts\\snapcast-midi.py': [Errno 2] No such file or directory
+2026-08-16 18:17:03.081: C:\Users\danie\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\danie\\Documents\\1-programming\\Python\\snapcast-midi\\venv\\Scripts\\snapcast-midi.py': [Errno 2] No such file or directory
+2026-08-17 05:42:42.821: Traceback (most recent call last):
+2026-08-17 05:42:42.821:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\snapcast-midi.py", line 44, in <module>
+2026-08-17 05:42:42.821:     vban.login()
+2026-08-17 05:42:42.821:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 100, in login
+2026-08-17 05:42:42.827:     self._handle_pong()
+2026-08-17 05:42:42.827:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\util.py", line 42, in wrapper
+2026-08-17 05:42:42.835:     if func(self):
+2026-08-17 05:42:42.835:        ^^^^^^^^^^
+2026-08-17 05:42:42.835:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 159, in _handle_pong
+2026-08-17 05:42:42.835:     data, addr = self.sock.recvfrom(2048)
+2026-08-17 05:42:42.835:                  ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-17 05:42:42.835: ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+2026-08-17 05:42:45.077: Traceback (most recent call last):
+2026-08-17 05:42:45.077:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\snapcast-midi.py", line 44, in <module>
+2026-08-17 05:42:45.077:     vban.login()
+2026-08-17 05:42:45.077:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 100, in login
+2026-08-17 05:42:45.077:     self._handle_pong()
+2026-08-17 05:42:45.077:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\util.py", line 42, in wrapper
+2026-08-17 05:42:45.077:     if func(self):
+2026-08-17 05:42:45.077:        ^^^^^^^^^^
+2026-08-17 05:42:45.085:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 159, in _handle_pong
+2026-08-17 05:42:45.085:     data, addr = self.sock.recvfrom(2048)
+2026-08-17 05:42:45.085:                  ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-17 05:42:45.085: ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+2026-08-17 05:42:49.313: Traceback (most recent call last):
+2026-08-17 05:42:49.313:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\snapcast-midi.py", line 44, in <module>
+2026-08-17 05:42:49.313:     vban.login()
+2026-08-17 05:42:49.313:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 100, in login
+2026-08-17 05:42:49.313:     self._handle_pong()
+2026-08-17 05:42:49.313:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\util.py", line 42, in wrapper
+2026-08-17 05:42:49.313:     if func(self):
+2026-08-17 05:42:49.313:        ^^^^^^^^^^
+2026-08-17 05:42:49.313:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 159, in _handle_pong
+2026-08-17 05:42:49.313:     data, addr = self.sock.recvfrom(2048)
+2026-08-17 05:42:49.313:                  ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-17 05:42:49.313: ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+2026-08-17 05:42:57.558: Traceback (most recent call last):
+2026-08-17 05:42:57.563:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\snapcast-midi.py", line 44, in <module>
+2026-08-17 05:42:57.563:     vban.login()
+2026-08-17 05:42:57.563:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 100, in login
+2026-08-17 05:42:57.563:     self._handle_pong()
+2026-08-17 05:42:57.563:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\util.py", line 42, in wrapper
+2026-08-17 05:42:57.563:     if func(self):
+2026-08-17 05:42:57.563:        ^^^^^^^^^^
+2026-08-17 05:42:57.563:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 159, in _handle_pong
+2026-08-17 05:42:57.563:     data, addr = self.sock.recvfrom(2048)
+2026-08-17 05:42:57.563:                  ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-17 05:42:57.563: ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+2026-08-17 05:43:13.827: Traceback (most recent call last):
+2026-08-17 05:43:13.827:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\snapcast-midi.py", line 44, in <module>
+2026-08-17 05:43:13.827:     vban.login()
+2026-08-17 05:43:13.827:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 100, in login
+2026-08-17 05:43:13.827:     self._handle_pong()
+2026-08-17 05:43:13.827:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\util.py", line 42, in wrapper
+2026-08-17 05:43:13.828:     if func(self):
+2026-08-17 05:43:13.828:        ^^^^^^^^^^
+2026-08-17 05:43:13.828:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 159, in _handle_pong
+2026-08-17 05:43:13.828:     data, addr = self.sock.recvfrom(2048)
+2026-08-17 05:43:13.828:                  ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-17 05:43:13.828: ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+2026-08-17 05:43:46.092: Traceback (most recent call last):
+2026-08-17 05:43:46.092:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\snapcast-midi.py", line 44, in <module>
+2026-08-17 05:43:46.092:     vban.login()
+2026-08-17 05:43:46.092:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 100, in login
+2026-08-17 05:43:46.092:     self._handle_pong()
+2026-08-17 05:43:46.092:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\util.py", line 42, in wrapper
+2026-08-17 05:43:46.092:     if func(self):
+2026-08-17 05:43:46.092:        ^^^^^^^^^^
+2026-08-17 05:43:46.092:   File "C:\Users\danie\Documents\1-programming\Python\snapcast-midi\venv\Lib\site-packages\vban_cmd\vbancmd.py", line 159, in _handle_pong
+2026-08-17 05:43:46.092:     data, addr = self.sock.recvfrom(2048)
+2026-08-17 05:43:46.092:                  ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-17 05:43:46.092: ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen

@@ -5,7 +5,9 @@ import mido
 import subprocess
 import vban_cmd
 
-BROADCAST_GUI_EXE = r"C:\Program Files\Snap.Net\Snap.Net.exe"
+broadcast_process = None
+
+BROADCAST_EXE = r"C:\Program Files\Snap.Net\Snap.Net.Broadcast.exe"
 
 # --- KONFIGURATION ---
 SNAPSERVER_IP = "192.168.100.150"
@@ -18,7 +20,7 @@ TOGGLE_NOTE = 39
 
 # 1. Lautstärke-Potis (CC 5 bis 8)
 MIDI_TO_CLIENT = {
-    5: "biggi", 
+    5: "d8:43:ae:12:04:17#11", 
     6: "pi4",   
     7: "kueche", 
     8: "11:22:33:44:55:66" 
@@ -26,7 +28,7 @@ MIDI_TO_CLIENT = {
 
 # 2. Mute-Pads (Dezimal-Notennummern: 35, 36, 37, 38)
 NOTE_TO_MUTE = {
-    35: "biggi", 
+    35: "d8:43:ae:12:04:17#11", 
     36: "pi4",   
     37: "kueche", 
     38: "11:22:33:44:55:66" 
@@ -45,7 +47,7 @@ vban.login()
 multiroom_active = False
 
 def set_multiroom_on():
-    global multiroom_active
+    global multiroom_active, broadcast_process
     if multiroom_active:
         return
     
@@ -59,16 +61,25 @@ def set_multiroom_on():
         vban.sendtext("Point(VAIO2.IN[1],ASIO128.OUT[1]).dBGain = 0.0;")
         vban.sendtext("Point(VAIO2.IN[2],ASIO128.OUT[2]).dBGain = 0.0;")
         
-        # 2. Snap.Net GUI Tool starten
-        subprocess.Popen(
-            [BROADCAST_GUI_EXE],
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        # 2. Broadcast starten
+        if broadcast_process is None:
+            broadcast_process = subprocess.Popen(
+                [
+                    BROADCAST_EXE, 
+                    "-s", "6", 
+                    "-h", SNAPSERVER_IP, 
+                    "-p", "4953"
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
     except Exception as e:
         print(f"[FEHLER set_multiroom_on]: {e}")
 
 def set_multiroom_off():
-    global multiroom_active
+    global multiroom_active, broadcast_process
     if not multiroom_active:
         return
         
@@ -82,12 +93,16 @@ def set_multiroom_off():
         vban.sendtext("Point(VAIO1.IN[1],ASIO128.OUT[1]).dBGain = -6.0;")
         vban.sendtext("Point(VAIO1.IN[2],ASIO128.OUT[2]).dBGain = -6.0;")
         
-        # 2. Snap.Net GUI beenden
-        subprocess.Popen(
-            ["taskkill", "/f", "/im", "Snap.Net.exe"], 
-            stdout=subprocess.DEVNULL, 
-            stderr=subprocess.DEVNULL
-        )
+        # 2. Broadcast sofort beenden
+        if broadcast_process is not None:
+            try:
+                broadcast_process.kill()
+            except Exception:
+                pass
+            broadcast_process = None
+        
+        subprocess.Popen(["taskkill", "/f", "/im", "Snap.Net.Broadcast.exe"], 
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
         print(f"[FEHLER set_multiroom_off]: {e}")
 

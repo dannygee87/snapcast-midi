@@ -3,9 +3,14 @@ import requests
 import json
 import mido
 import subprocess
+import re
 import vban_cmd
 
-BROADCAST_GUI_EXE = r"C:\Program Files\Snap.Net\Snap.Net.exe"
+broadcast_process = None
+client_process = None
+
+BROADCAST_EXE = r"C:\Program Files\Snap.Net\Snap.Net.Broadcast.exe"
+SNAPCLIENT_EXE = r"C:\Program Files\Snap.Net\SnapClient.Net.exe"
 
 # --- KONFIGURATION ---
 SNAPSERVER_IP = "192.168.100.150"
@@ -18,15 +23,15 @@ TOGGLE_NOTE = 39
 
 # 1. Lautstärke-Potis (CC 5 bis 8)
 MIDI_TO_CLIENT = {
-    5: "biggi", 
-    6: "pi4",   
-    7: "kueche", 
-    8: "11:22:33:44:55:66" 
+    5: "d8:43:ae:12:04:17#11",  # biggi
+    6: "pi4",   # pi4 - wz
+    7: "kueche", # kueche pi
+    8: "11:22:33:44:55:66"  # reserve
 }
 
 # 2. Mute-Pads (Dezimal-Notennummern: 35, 36, 37, 38)
 NOTE_TO_MUTE = {
-    35: "biggi", 
+    35: "d8:43:ae:12:04:17#11", 
     36: "pi4",   
     37: "kueche", 
     38: "11:22:33:44:55:66" 
@@ -44,13 +49,44 @@ vban.login()
 # Flag für den aktuellen Status
 multiroom_active = False
 
+def get_device_index(exe_path, target_device, fallback_index="1"):
+    """
+    Listet die Audio-Interfaces via Exe -l auf
+    und liefert den Index des gesuchten Geräts zurück.
+    """
+    try:
+        output = subprocess.check_output(
+            [exe_path, "-l"], 
+            stderr=subprocess.STDOUT, 
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        for line in output.splitlines():
+            if target_device in line:
+                match = re.match(r"^\s*(\d+):", line)
+                if match:
+                    index = match.group(1)
+                    print(f"-> Audio-Interface '{target_device}' auf Index {index} gefunden.")
+                    return index
+    except Exception as e:
+        print(f"[FEHLER beim Auslesen der Interfaces mit {exe_path}]: {e}")
+    
+    print(f"-> Warnung: '{target_device}' nicht gefunden. Verwende Fallback Index '{fallback_index}'.")
+    return fallback_index
+
+
+
 def set_multiroom_on():
-    global multiroom_active
+    global multiroom_active, broadcast_process, client_process
     if multiroom_active:
         return
     
     multiroom_active = True
     print("--> MULTIROOM AKTIV (PC-Direct = -80dB, SnapClient = 0dB)")
+    
+    # Dynamische Device-Indizes ermitteln
+    broadcast_index = get_device_index(BROADCAST_EXE, "CABLE Input (VB-Audio Virtual Cable)", fallback_index="6")
+    client_index = get_device_index(SNAPCLIENT_EXE, "VBMatrix In 2 (VB-Audio Matrix VAIO)", fallback_index="2")
     
     try:
         # 1. Matrix schalten
@@ -59,16 +95,39 @@ def set_multiroom_on():
         vban.sendtext("Point(VAIO2.IN[1],ASIO128.OUT[1]).dBGain = 0.0;")
         vban.sendtext("Point(VAIO2.IN[2],ASIO128.OUT[2]).dBGain = 0.0;")
         
-        # 2. Snap.Net GUI Tool starten
-        subprocess.Popen(
-            [BROADCAST_GUI_EXE],
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        # 2. Broadcast starten mit dynamischem Index
+        if broadcast_process is None:
+            broadcast_process = subprocess.Popen(
+                [
+                    BROADCAST_EXE, 
+                    "-s", broadcast_index, 
+                    "-h", SNAPSERVER_IP, 
+                    "-p", "4953"
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+        # 3. Lokalen SnapClient starten mit dynamischem Index
+        if client_process is None:
+            client_process = subprocess.Popen(
+                [
+                    SNAPCLIENT_EXE, 
+                    "-h", "192.168.100.155", 
+                    "-s", client_index
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
     except Exception as e:
         print(f"[FEHLER set_multiroom_on]: {e}")
 
 def set_multiroom_off():
-    global multiroom_active
+    global multiroom_active, broadcast_process, client_process
     if not multiroom_active:
         return
         
@@ -82,12 +141,26 @@ def set_multiroom_off():
         vban.sendtext("Point(VAIO1.IN[1],ASIO128.OUT[1]).dBGain = -6.0;")
         vban.sendtext("Point(VAIO1.IN[2],ASIO128.OUT[2]).dBGain = -6.0;")
         
-        # 2. Snap.Net GUI beenden
-        subprocess.Popen(
-            ["taskkill", "/f", "/im", "Snap.Net.exe"], 
-            stdout=subprocess.DEVNULL, 
-            stderr=subprocess.DEVNULL
-        )
+        # 2. Broadcast stoppen
+        if broadcast_process is not None:
+            try:
+                broadcast_process.kill()
+            except Exception:
+                pass
+            broadcast_process = None
+
+        # 3. Lokalen SnapClient stoppen
+        if client_process is not None:
+            try:
+                client_process.kill()
+            except Exception:
+                pass
+            client_process = None
+        
+        subprocess.Popen(["taskkill", "/f", "/im", "Snap.Net.Broadcast.exe"], 
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(["taskkill", "/f", "/im", "SnapClient.Net.exe"], 
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
         print(f"[FEHLER set_multiroom_off]: {e}")
 
