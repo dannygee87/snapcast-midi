@@ -12,20 +12,9 @@ SNAPSERVER_IP = "192.168.100.150"
 SNAPSERVER_PORT = 1780 
 
 SEND_DELAY = 0.15 
-ACTION_DEBOUNCE_DELAY = 2.0  # 2 Sekunden Sperre gegen Mehrfachauslösung
 
 # Multiroom Toggle Button (Pad 5 -> Note 39)
-TOGGLE_NOTE = 39 
-
-# Zusätzliche Steuerungs-Notes
-RESTART_NOTE = 41
-SHOW_NOTE = 42
-
-# Timestamp-Speicher für den Debouncer
-last_action_times = {
-    RESTART_NOTE: 0,
-    SHOW_NOTE: 0
-}
+TOGGLE_NOTE = 39  
 
 # 1. Lautstärke-Potis (CC 5 bis 8)
 MIDI_TO_CLIENT = {
@@ -54,20 +43,6 @@ vban.login()
 
 # Flag für den aktuellen Status
 multiroom_active = False
-
-def restart_audio_engine():
-    print("--> AUDIO ENGINE RESTART")
-    try:
-        vban.sendtext("Command.Restart = 1;")
-    except Exception as e:
-        print(f"[FEHLER restart_audio_engine]: {e}")
-
-def show_matrix():
-    print("--> SHOW MATRIX GUI")
-    try:
-        vban.sendtext("Command.Show = 1;")
-    except Exception as e:
-        print(f"[FEHLER show_matrix]: {e}")
 
 def set_multiroom_on():
     global multiroom_active
@@ -193,22 +168,12 @@ def main():
                             
                     # C) HARDWARE-TOGGLE FÜR MULTIROOM (Pad 5 / Note 39)
                     elif hasattr(msg, 'note') and msg.note == TOGGLE_NOTE:
+                        # 1. Druck (Pad leuchtet auf) -> Multiroom EIN
                         if msg.type == 'note_on' and msg.velocity > 0:
                             set_multiroom_on()
+                        # 2. Druck (Pad geht aus) -> Lokal (AUS)
                         elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
                             set_multiroom_off()
-
-                    # D) RESTART AUDIO ENGINE (Note 41) - mit 2s Debouncer
-                    elif hasattr(msg, 'note') and msg.note == RESTART_NOTE:
-                        if now - last_action_times[RESTART_NOTE] >= ACTION_DEBOUNCE_DELAY:
-                            restart_audio_engine()
-                            last_action_times[RESTART_NOTE] = now
-
-                    # E) SHOW MATRIX GUI (Note 42) - mit 2s Debouncer
-                    elif hasattr(msg, 'note') and msg.note == SHOW_NOTE:
-                        if now - last_action_times[SHOW_NOTE] >= ACTION_DEBOUNCE_DELAY:
-                            show_matrix()
-                            last_action_times[SHOW_NOTE] = now
 
             # --- Debounce-Puffer abarbeiten ---
             clients_to_remove = []
